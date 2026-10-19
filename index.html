@@ -676,6 +676,7 @@ Nada bicara jujur, tajam, memberi masukan membangun, serta berbasis psikologi au
         throw new Error('API Key Gemini belum diset. Silakan isi terlebih dahulu.');
       }
 
+      // Endpoint resmi yang valid & stabil
       const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
       const payload = {
