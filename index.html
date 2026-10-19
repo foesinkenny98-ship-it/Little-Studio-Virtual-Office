@@ -1,0 +1,920 @@
+```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Little Studio Virtual Office - Gemini AI Team</title>
+  
+  <!-- Tailwind CSS & Fonts -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            pixel: ['"Press Start 2P"', 'monospace'],
+            vt: ['VT323', 'monospace'],
+            sans: ['Fredoka', 'sans-serif'],
+          },
+          colors: {
+            retroBg: '#1e1b2e',
+            retroCard: '#2a2640',
+            retroBorder: '#4a4468',
+            retroAccent: '#ff79c6',
+            retroPurple: '#bd93f9',
+            retroCyan: '#8be9fd',
+            retroGreen: '#50fa7b',
+            retroYellow: '#f1fa8c',
+            retroOrange: '#ffb86c',
+            retroRed: '#ff5555'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Pixel Art Theme Styling */
+    body {
+      background-color: #161426;
+      color: #f8f8f2;
+      background-image: 
+        radial-gradient(#2a2640 1px, transparent 0);
+      background-size: 24px 24px;
+    }
+
+    .pixel-border {
+      border: 4px solid #4a4468;
+      box-shadow: 
+        inset -4px -4px 0px 0px #1a1728,
+        4px 4px 0px 0px #0c0a14;
+    }
+
+    .pixel-box {
+      border: 3px solid #ff79c6;
+      box-shadow: 3px 3px 0 #bd93f9;
+    }
+
+    .pixel-btn {
+      transition: all 0.1s ease;
+      position: relative;
+      border: 3px solid #ff79c6;
+      box-shadow: 0 4px 0 #bd93f9;
+    }
+
+    .pixel-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 #bd93f9;
+    }
+
+    .bot-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .bot-card:hover {
+      transform: translateY(-4px);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .animate-float {
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 10px rgba(139, 233, 253, 0.4); }
+      50% { box-shadow: 0 0 22px rgba(139, 233, 253, 0.8); }
+    }
+
+    .working-glow {
+      animation: pulse-glow 1.5s infinite;
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #1e1b2e;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #4a4468;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #ff79c6;
+    }
+
+    .line-clamp-3 {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col justify-between p-2 md:p-6">
+
+  <!-- TOP HEADER & CONTROLS -->
+  <header class="bg-retroCard pixel-border p-4 mb-6 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-12 h-12 bg-retroAccent rounded-lg flex items-center justify-center text-retroBg text-2xl font-pixel animate-float">
+        <i class="fa-solid fa-gamepad"></i>
+      </div>
+      <div>
+        <h1 class="font-pixel text-xl text-retroAccent tracking-wider">LITTLE STUDIO</h1>
+        <p class="text-xs text-retroCyan font-vt text-lg tracking-widest">VIRTUAL OFFICE • GEMINI 2.5 POWERED</p>
+      </div>
+    </div>
+
+    <!-- Quick Controls -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- API KEY BTN -->
+      <button id="apiKeyBtn" onclick="openKeyModal()" class="bg-retroPurple hover:bg-opacity-90 text-retroBg font-bold px-3 py-2 rounded text-sm flex items-center gap-2 pixel-btn">
+        <i class="fa-solid fa-key"></i>
+        <span id="apiKeyStatusText">Set API Key</span>
+      </button>
+
+      <!-- AUDIO TOGGLE -->
+      <button id="soundToggleBtn" onclick="toggleSound()" class="bg-retroCard hover:bg-retroBorder text-retroYellow border-2 border-retroYellow px-3 py-2 rounded text-sm flex items-center gap-2">
+        <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+        <span class="hidden sm:inline">Audio</span>
+      </button>
+
+      <!-- BROADCAST ALL BTN -->
+      <button onclick="openBroadcastModal()" class="bg-retroGreen text-retroBg font-bold px-4 py-2 rounded text-sm flex items-center gap-2 pixel-btn">
+        <i class="fa-solid fa-bullhorn"></i>
+        <span>Broadcast Prompt</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- API KEY BANNER (If not configured) -->
+  <div id="keyWarningBanner" class="hidden bg-retroRed/20 border-2 border-retroRed text-retroRed p-4 rounded-lg mb-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+      <div>
+        <div class="font-bold">Gemini API Key Belum Terpasang!</div>
+        <div class="text-xs text-gray-300">Harap masukkan API Key Gemini Anda untuk memicu generasi AI langsung dari para bot teammate.</div>
+      </div>
+    </div>
+    <button onclick="openKeyModal()" class="bg-retroRed text-white px-4 py-1.5 rounded text-xs font-pixel">Set Key Sekarang</button>
+  </div>
+
+  <!-- MAIN OFFICE GRID (5 BOTS) -->
+  <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 flex-1">
+
+    <!-- BOT 1: SCRIPT WRITER -->
+    <div id="card-neko" class="bot-card bg-retroCard pixel-border rounded-xl p-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-retroBorder mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-retroPurple rounded-lg flex items-center justify-center text-2xl text-retroBg font-bold animate-float">
+              🐱
+            </div>
+            <div>
+              <h2 class="font-pixel text-sm text-retroPurple">Neko-Script</h2>
+              <p class="text-xs text-gray-400">Script & Storyboard Writer</p>
+            </div>
+          </div>
+          <span id="badge-neko" class="px-2 py-0.5 text-[10px] font-pixel rounded bg-gray-700 text-gray-300">IDLE</span>
+        </div>
+
+        <p class="text-xs text-gray-300 mb-3 italic">"Menulis script Reels/TikTok super engaging, hook memikat, timestamp, & CTA viral!"</p>
+
+        <!-- Prompt input -->
+        <textarea id="prompt-neko" rows="3" class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-200 focus:outline-none focus:border-retroPurple mb-3 resize-none" placeholder="Contoh: Ide konten komedi tentang perjuangan kerja remote jam 2 malam..."></textarea>
+
+        <!-- Live Output Box -->
+        <div class="relative bg-retroBg border border-retroBorder rounded p-3 min-h-[160px] max-h-[220px] overflow-y-auto text-xs text-gray-200 mb-3" id="output-neko">
+          <span class="text-gray-500 italic">Belum ada instruksi. Ketik prompt lalu tekan 'Mulai Nulis'...</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-retroBorder">
+        <button onclick="runBot('neko')" id="btn-neko" class="flex-1 bg-retroPurple hover:bg-opacity-90 text-retroBg font-bold py-2 px-3 rounded text-xs pixel-btn flex justify-center items-center gap-1">
+          <i class="fa-solid fa-pen-nib"></i>
+          <span>Mulai Nulis</span>
+        </button>
+        <button onclick="copyBotOutput('neko')" title="Copas Hasil" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+        <button onclick="clearBot('neko')" title="Reset Output" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- BOT 2: VISUAL DESIGNER -->
+    <div id="card-pixel" class="bot-card bg-retroCard pixel-border rounded-xl p-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-retroBorder mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-retroAccent rounded-lg flex items-center justify-center text-2xl text-retroBg font-bold animate-float">
+              🎨
+            </div>
+            <div>
+              <h2 class="font-pixel text-sm text-retroAccent">Pixel-Artisan</h2>
+              <p class="text-xs text-gray-400">Carousel & Visual Director</p>
+            </div>
+          </div>
+          <span id="badge-pixel" class="px-2 py-0.5 text-[10px] font-pixel rounded bg-gray-700 text-gray-300">IDLE</span>
+        </div>
+
+        <p class="text-xs text-gray-300 mb-3 italic">"Rancangan visual slide carousel, tata letak thumbnail, & prompt AI Image visual!"</p>
+
+        <!-- Prompt input -->
+        <textarea id="prompt-pixel" rows="3" class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-200 focus:outline-none focus:border-retroAccent mb-3 resize-none" placeholder="Contoh: Design 5 slide carousel tentang tips produktivitas minimalis..."></textarea>
+
+        <!-- Live Output Box -->
+        <div class="relative bg-retroBg border border-retroBorder rounded p-3 min-h-[160px] max-h-[220px] overflow-y-auto text-xs text-gray-200 mb-3" id="output-pixel">
+          <span class="text-gray-500 italic">Belum ada ide visual. Berikan topik untuk didesain...</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-retroBorder">
+        <button onclick="runBot('pixel')" id="btn-pixel" class="flex-1 bg-retroAccent hover:bg-opacity-90 text-retroBg font-bold py-2 px-3 rounded text-xs pixel-btn flex justify-center items-center gap-1">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>Rancang Visual</span>
+        </button>
+        <button onclick="copyBotOutput('pixel')" title="Copas Hasil" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+        <button onclick="clearBot('pixel')" title="Reset Output" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- BOT 3: SEO & HASHTAGS -->
+    <div id="card-tag" class="bot-card bg-retroCard pixel-border rounded-xl p-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-retroBorder mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-retroCyan rounded-lg flex items-center justify-center text-2xl text-retroBg font-bold animate-float">
+              🏷️
+            </div>
+            <div>
+              <h2 class="font-pixel text-sm text-retroCyan">Tag-Master</h2>
+              <p class="text-xs text-gray-400">SEO & Hashtags Expert</p>
+            </div>
+          </div>
+          <span id="badge-tag" class="px-2 py-0.5 text-[10px] font-pixel rounded bg-gray-700 text-gray-300">IDLE</span>
+        </div>
+
+        <p class="text-xs text-gray-300 mb-3 italic">"Cari hashtag relevan, Judul YouTube tinggi CTR, & keyword SEO agar cepat FYP."</p>
+
+        <!-- Prompt input -->
+        <textarea id="prompt-tag" rows="3" class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-200 focus:outline-none focus:border-retroCyan mb-3 resize-none" placeholder="Contoh: Rintis bisnis kedai kopi kekinian modal 5 juta..."></textarea>
+
+        <!-- Live Output Box -->
+        <div class="relative bg-retroBg border border-retroBorder rounded p-3 min-h-[160px] max-h-[220px] overflow-y-auto text-xs text-gray-200 mb-3" id="output-tag">
+          <span class="text-gray-500 italic">Siap meriset keyword dan tag terpanas...</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-retroBorder">
+        <button onclick="runBot('tag')" id="btn-tag" class="flex-1 bg-retroCyan hover:bg-opacity-90 text-retroBg font-bold py-2 px-3 rounded text-xs pixel-btn flex justify-center items-center gap-1">
+          <i class="fa-solid fa-hashtag"></i>
+          <span>Riset SEO</span>
+        </button>
+        <button onclick="copyBotOutput('tag')" title="Copas Hasil" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+        <button onclick="clearBot('tag')" title="Reset Output" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- BOT 4: CONTENT PLANNER -->
+    <div id="card-sched" class="bot-card bg-retroCard pixel-border rounded-xl p-4 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-retroBorder mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-retroGreen rounded-lg flex items-center justify-center text-2xl text-retroBg font-bold animate-float">
+              📅
+            </div>
+            <div>
+              <h2 class="font-pixel text-sm text-retroGreen">Sched-Bot</h2>
+              <p class="text-xs text-gray-400">Content Calendar Strategist</p>
+            </div>
+          </div>
+          <span id="badge-sched" class="px-2 py-0.5 text-[10px] font-pixel rounded bg-gray-700 text-gray-300">IDLE</span>
+        </div>
+
+        <p class="text-xs text-gray-300 mb-3 italic">"Menyusun jadwal posting mingguan, pilar konten, & slot jam terbaik."</p>
+
+        <!-- Prompt input -->
+        <textarea id="prompt-sched" rows="3" class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-200 focus:outline-none focus:border-retroGreen mb-3 resize-none" placeholder="Contoh: Jadwal posting 7 hari untuk akun brand skincare lokal..."></textarea>
+
+        <!-- Live Output Box -->
+        <div class="relative bg-retroBg border border-retroBorder rounded p-3 min-h-[160px] max-h-[220px] overflow-y-auto text-xs text-gray-200 mb-3" id="output-sched">
+          <span class="text-gray-500 italic">Jadwal masih kosong. Berikan tema kalender...</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-retroBorder">
+        <button onclick="runBot('sched')" id="btn-sched" class="flex-1 bg-retroGreen hover:bg-opacity-90 text-retroBg font-bold py-2 px-3 rounded text-xs pixel-btn flex justify-center items-center gap-1">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Buat Jadwal</span>
+        </button>
+        <button onclick="copyBotOutput('sched')" title="Copas Hasil" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+        <button onclick="clearBot('sched')" title="Reset Output" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- BOT 5: ANALYTICS COACH -->
+    <div id="card-data" class="bot-card bg-retroCard pixel-border rounded-xl p-4 flex flex-col justify-between md:col-span-2 lg:col-span-1">
+      <div>
+        <div class="flex items-center justify-between pb-3 border-b border-retroBorder mb-3">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 bg-retroYellow rounded-lg flex items-center justify-center text-2xl text-retroBg font-bold animate-float">
+              🐶
+            </div>
+            <div>
+              <h2 class="font-pixel text-sm text-retroYellow">Data-Dog</h2>
+              <p class="text-xs text-gray-400">Auditor & Growth Coach</p>
+            </div>
+          </div>
+          <span id="badge-data" class="px-2 py-0.5 text-[10px] font-pixel rounded bg-gray-700 text-gray-300">IDLE</span>
+        </div>
+
+        <p class="text-xs text-gray-300 mb-3 italic">"Kritik tajam performa konten, optimasi angka engagement, & strategi viral."</p>
+
+        <!-- Prompt input -->
+        <textarea id="prompt-data" rows="3" class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-200 focus:outline-none focus:border-retroYellow mb-3 resize-none" placeholder="Contoh: Kenapa konten edukasi saya likes tinggi tapi share & bookmark sedikit?"></textarea>
+
+        <!-- Live Output Box -->
+        <div class="relative bg-retroBg border border-retroBorder rounded p-3 min-h-[160px] max-h-[220px] overflow-y-auto text-xs text-gray-200 mb-3" id="output-data">
+          <span class="text-gray-500 italic">Siap menganalisis data dan problem performa kamu...</span>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center justify-between gap-2 pt-2 border-t border-retroBorder">
+        <button onclick="runBot('data')" id="btn-data" class="flex-1 bg-retroYellow hover:bg-opacity-90 text-retroBg font-bold py-2 px-3 rounded text-xs pixel-btn flex justify-center items-center gap-1">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Analisis Strategi</span>
+        </button>
+        <button onclick="copyBotOutput('data')" title="Copas Hasil" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-copy"></i>
+        </button>
+        <button onclick="clearBot('data')" title="Reset Output" class="bg-retroBorder hover:bg-gray-600 text-gray-200 p-2 rounded text-xs">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MASTER CAMPAIGN AGGREGATOR PANEL -->
+  <section class="bg-retroCard pixel-border p-4 rounded-xl mb-6">
+    <div class="flex flex-col sm:flex-row items-center justify-between border-b border-retroBorder pb-3 mb-4 gap-2">
+      <div class="flex items-center gap-2">
+        <i class="fa-solid fa-cubes text-retroAccent text-xl"></i>
+        <h2 class="font-pixel text-sm text-retroAccent">MASTER CAMPAIGN BUNDLE</h2>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="copyFullCampaign()" class="bg-retroPurple text-retroBg font-bold px-3 py-1.5 rounded text-xs pixel-btn flex items-center gap-1">
+          <i class="fa-solid fa-copy"></i> Copas Semua Hasil
+        </button>
+        <button onclick="clearAllOutputs()" class="bg-retroRed/80 hover:bg-retroRed text-white font-bold px-3 py-1.5 rounded text-xs flex items-center gap-1">
+          <i class="fa-solid fa-trash"></i> Reset
+        </button>
+      </div>
+    </div>
+    <div id="campaignSummary" class="text-xs text-gray-300 font-mono bg-retroBg p-3 rounded max-h-48 overflow-y-auto whitespace-pre-wrap border border-retroBorder">
+      Belum ada kampanye gabungan. Lakukan broadcast atau jalankan setiap bot untuk mengompilasi brief lengkap di sini.
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="text-center text-xs text-gray-500 font-vt text-lg pt-4 border-t border-retroBorder">
+    LITTLE STUDIO VIRTUAL OFFICE • GEMINI AI AUTOMATION ENGINE • AUTO-SAVED TO LOCALSTORAGE
+  </footer>
+
+  <!-- MODAL: SET API KEY -->
+  <div id="keyModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-retroCard pixel-border rounded-xl p-6 max-w-md w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-pixel text-sm text-retroCyan flex items-center gap-2">
+          <i class="fa-solid fa-key"></i> GEMINI API KEY
+        </h3>
+        <button onclick="closeKeyModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p class="text-xs text-gray-300 mb-4">
+        Masukkan Google Gemini API Key Anda. Key disimpan secara aman di browser Anda (LocalStorage) dan digunakan untuk memanggil model <span class="text-retroYellow">gemini-2.5-flash</span>.
+      </p>
+
+      <input id="keyInput" type="password" placeholder="AIzaSy..." class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-100 font-mono mb-4 focus:outline-none focus:border-retroCyan" />
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeKeyModal()" class="px-4 py-2 bg-retroBorder rounded text-xs text-gray-300">Batal</button>
+        <button onclick="saveApiKey()" class="px-4 py-2 bg-retroCyan text-retroBg font-bold rounded text-xs pixel-btn">Simpan Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BROADCAST COMMAND -->
+  <div id="broadcastModal" class="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-retroCard pixel-border rounded-xl p-6 max-w-lg w-full">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="font-pixel text-sm text-retroGreen flex items-center gap-2">
+          <i class="fa-solid fa-bullhorn"></i> BROADCAST COMMAND
+        </h3>
+        <button onclick="closeBroadcastModal()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <p class="text-xs text-gray-300 mb-3">
+        Kirim satu instruksi utama ke seluruh 5 bot sekaligus. Setiap bot akan memproses instruksi ini sesuai dengan keahlian persona mereka.
+      </p>
+
+      <textarea id="broadcastPrompt" rows="4" class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-100 mb-4 focus:outline-none focus:border-retroGreen resize-none" placeholder="Contoh: Buat strategi peluncuran produk kopi susu literan siap minum untuk anak muda perkotaan..."></textarea>
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closeBroadcastModal()" class="px-4 py-2 bg-retroBorder rounded text-xs text-gray-300">Batal</button>
+        <button onclick="executeBroadcast()" class="px-4 py-2 bg-retroGreen text-retroBg font-bold rounded text-xs pixel-btn">
+          🚀 Jalankan Ke Semua Bot
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-retroGreen text-retroBg font-bold px-4 py-2 rounded-lg pixel-border text-xs z-50 transform translate-y-20 opacity-0 transition-all duration-300">
+    <span id="toastMsg">Notification</span>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // System Prompts for each Bot Persona
+    const BOT_CONFIGS = {
+      neko: {
+        name: 'Neko-Script',
+        role: 'Script Writer',
+        systemPrompt: `Kamu adalah Neko-Script, bot penulis naskah kreatif dan storyboard specialist di Little Studio Virtual Office.
+Tugas utama: Menulis naskah video pendek (Instagram Reels / TikTok / Shorts) yang santai, menarik, dan berpotensi viral.
+Format Output:
+- 🎯 HOOK AUDIOWISUAL (0-3 detik)
+- 📝 NASKAH TERSTRUKTUR (Timestamp, Visual, Script/Voiceover)
+- 💡 CALL TO ACTION (CTA)
+- ✏️ REKOMENDASI CAPTION
+Gunakan nada bahasa santai, kasual, profesional namun seru!`
+      },
+      pixel: {
+        name: 'Pixel-Artisan',
+        role: 'Visual Designer',
+        systemPrompt: `Kamu adalah Pixel-Artisan, pengarah visual dan desainer konten di Little Studio Virtual Office.
+Tugas utama: Menyusun tata letak visual, slide breakdown untuk Instagram Carousel, serta panduan prompt gambar AI.
+Format Output:
+- 🖼️ CONCEPT & COLOR PALETTE
+- 📄 SLIDE BREAKDOWN (Slide 1: Cover/Hook Visual, Slide 2-N: Content Layout, Final Slide: Closing)
+- 🎨 PROMPT AI IMAGE (Midjourney / Dall-E / Leonardo)
+Gunakan gaya penyampaian artistik, terstruktur, dan siap dieksekusi desainer!`
+      },
+      tag: {
+        name: 'Tag-Master',
+        role: 'SEO & Hashtag Expert',
+        systemPrompt: `Kamu adalah Tag-Master, pakar SEO media sosial dan algoritma di Little Studio Virtual Office.
+Tugas utama: Mencari keyword terpanas, judul berefisiensi CTR tinggi, serta kelompok hashtag relevan.
+Format Output:
+- 🚀 3 PILIHAN JUDUL HIGH-CTR (YouTube / Reels / Artikel)
+- 🔍 KEYWORD TARGET (Primary & Long-tail keywords)
+- 🏷️ BUNDLE HASHTAG (Spesifik, Medium, & General)
+Fokus pada penjangkauan maksimal dan kaidah algoritma terkini!`
+      },
+      sched: {
+        name: 'Sched-Bot',
+        role: 'Content Planner',
+        systemPrompt: `Kamu adalah Sched-Bot, perencana konten dan kurator kalender editorial di Little Studio Virtual Office.
+Tugas utama: Membikin alur matriks jadwal konten mingguan/bulanan yang seimbang antara edukasi, hiburan, dan jualan.
+Format Output:
+- 📅 JADWAL KONTEN MINGGUAN (Hari, Topik, Format, Jam Posting Optimal)
+- 📊 DISTRIBUSI PILAR KONTEN (Edu 40%, Ent 30%, Promo 30%)
+- 💡 TIPS KONSISTENSI & WORKFLOW
+Penyampaian rapi, teratur, dalam format tabel atau bullet point terstruktur!`
+      },
+      data: {
+        name: 'Data-Dog',
+        role: 'Analytics Coach',
+        systemPrompt: `Kamu adalah Data-Dog, konsultan strategi growth dan auditor performa konten di Little Studio Virtual Office.
+Tugas utama: Memberikan analisis kritis, penyebab konten sepi/kurang engage, serta solusi konkret optimasi viralitas.
+Format Output:
+- 🔍 AUDIT & IDENTIFIKASI MASALAH
+- 📈 REKOMENDASI OPTIMASI HOOK & RETENSI
+- ⚡ STRATEGI ENHANCEMENT ENGAGEMENT (Shareability & Bookmarkability)
+Nada bicara jujur, tajam, memberi masukan membangun, serta berbasis psikologi audiens!`
+      }
+    };
+
+    // Global State Variables
+    let apiKey = localStorage.getItem('GEMINI_API_KEY') || '';
+    let soundEnabled = localStorage.getItem('SOUND_ENABLED') !== 'false';
+    let botOutputs = JSON.parse(localStorage.getItem('BOT_OUTPUTS') || '{}');
+    let botPrompts = JSON.parse(localStorage.getItem('BOT_PROMPTS') || '{}');
+
+    // Web Audio API Synth Engine for 8-bit Sounds
+    let audioCtx = null;
+    function playSound(type) {
+      if (!soundEnabled) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+          gain.gain.setValueAtTime(0.1, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'complete') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now); // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+          osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        } else if (type === 'error') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(200, now);
+          osc.frequency.setValueAtTime(120, now + 0.1);
+          gain.gain.setValueAtTime(0.2, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        }
+      } catch (e) {
+        console.warn('Audio play error', e);
+      }
+    }
+
+    // Initialize UI on Load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateApiKeyUI();
+      updateSoundUI();
+      restoreSavedData();
+      updateMasterSummary();
+    });
+
+    function updateApiKeyUI() {
+      const statusText = document.getElementById('apiKeyStatusText');
+      const warningBanner = document.getElementById('keyWarningBanner');
+      
+      if (apiKey) {
+        statusText.innerText = 'Key Set ✔';
+        warningBanner.classList.add('hidden');
+      } else {
+        statusText.innerText = 'Set API Key';
+        warningBanner.classList.remove('hidden');
+      }
+    }
+
+    function updateSoundUI() {
+      const icon = document.getElementById('soundIcon');
+      if (soundEnabled) {
+        icon.className = 'fa-solid fa-volume-high text-retroGreen';
+      } else {
+        icon.className = 'fa-solid fa-volume-xmark text-retroRed';
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      localStorage.setItem('SOUND_ENABLED', soundEnabled);
+      updateSoundUI();
+      if (soundEnabled) playSound('click');
+    }
+
+    // Modal Control Functions
+    function openKeyModal() {
+      playSound('click');
+      document.getElementById('keyInput').value = apiKey;
+      document.getElementById('keyModal').classList.remove('hidden');
+    }
+
+    function closeKeyModal() {
+      playSound('click');
+      document.getElementById('keyModal').classList.add('hidden');
+    }
+
+    function saveApiKey() {
+      const val = document.getElementById('keyInput').value.trim();
+      apiKey = val;
+      localStorage.setItem('GEMINI_API_KEY', val);
+      updateApiKeyUI();
+      closeKeyModal();
+      showToast('API Key tersimpan!');
+      playSound('complete');
+    }
+
+    function openBroadcastModal() {
+      playSound('click');
+      document.getElementById('broadcastModal').classList.remove('hidden');
+    }
+
+    function closeBroadcastModal() {
+      playSound('click');
+      document.getElementById('broadcastModal').classList.add('hidden');
+    }
+
+    // Data Restore
+    function restoreSavedData() {
+      Object.keys(BOT_CONFIGS).forEach(key => {
+        if (botPrompts[key]) {
+          document.getElementById(`prompt-${key}`).value = botPrompts[key];
+        }
+        if (botOutputs[key]) {
+          document.getElementById(`output-${key}`).innerHTML = formatText(botOutputs[key]);
+        }
+      });
+    }
+
+    function saveState() {
+      Object.keys(BOT_CONFIGS).forEach(key => {
+        const pVal = document.getElementById(`prompt-${key}`).value;
+        botPrompts[key] = pVal;
+      });
+      localStorage.setItem('BOT_PROMPTS', JSON.stringify(botPrompts));
+      localStorage.setItem('BOT_OUTPUTS', JSON.stringify(botOutputs));
+      updateMasterSummary();
+    }
+
+    // Text formatting helper
+    function formatText(text) {
+      if (!text) return '';
+      let formatted = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\*\*(.*?)\*\*/g, '<strong class="text-retroYellow">$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br/>');
+      return formatted;
+    }
+
+    // Call Gemini API REST Endpoint
+    async function callGeminiApi(systemPrompt, userPrompt) {
+      if (!apiKey) {
+        throw new Error('API Key Gemini belum diset. Silakan isi terlebih dahulu.');
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+      const payload = {
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { text: userPrompt }
+            ]
+          }
+        ],
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        }
+      };
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error?.message || `API Error (${response.status})`);
+      }
+
+      const data = await response.json();
+      const textOutput = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!textOutput) {
+        throw new Error('Respons kosong diterima dari Gemini API.');
+      }
+
+      return textOutput;
+    }
+
+    // Run Single Bot Generation
+    async function runBot(botKey) {
+      playSound('click');
+
+      if (!apiKey) {
+        openKeyModal();
+        return;
+      }
+
+      const promptInput = document.getElementById(`prompt-${botKey}`);
+      const outputBox = document.getElementById(`output-${botKey}`);
+      const badge = document.getElementById(`badge-${botKey}`);
+      const btn = document.getElementById(`btn-${botKey}`);
+      const card = document.getElementById(`card-${botKey}`);
+
+      const userPrompt = promptInput.value.trim();
+      if (!userPrompt) {
+        showToast('Ketik instruksi prompt terlebih dahulu!');
+        playSound('error');
+        return;
+      }
+
+      // Set Loading UI
+      badge.className = 'px-2 py-0.5 text-[10px] font-pixel rounded bg-retroYellow text-retroBg font-bold animate-pulse';
+      badge.innerText = 'WORKING...';
+      card.classList.add('working-glow');
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+
+      outputBox.innerHTML = `
+        <div class="flex items-center gap-2 text-retroCyan animate-pulse">
+          <i class="fa-solid fa-spinner fa-spin"></i>
+          <span>Gemini sedang berpikir & memproses...</span>
+        </div>
+      `;
+
+      try {
+        const config = BOT_CONFIGS[botKey];
+        const result = await callGeminiApi(config.systemPrompt, userPrompt);
+
+        // Store & Display
+        botOutputs[botKey] = result;
+        outputBox.innerHTML = formatText(result);
+
+        badge.className = 'px-2 py-0.5 text-[10px] font-pixel rounded bg-retroGreen text-retroBg font-bold';
+        badge.innerText = 'DONE';
+        playSound('complete');
+        showToast(`${config.name} selesai!`);
+      } catch (err) {
+        outputBox.innerHTML = `<span class="text-retroRed font-semibold">❌ Error: ${err.message}</span>`;
+        badge.className = 'px-2 py-0.5 text-[10px] font-pixel rounded bg-retroRed text-white';
+        badge.innerText = 'ERROR';
+        playSound('error');
+      } finally {
+        card.classList.remove('working-glow');
+        btn.disabled = false;
+        btn.classList.remove('opacity-50');
+        saveState();
+      }
+    }
+
+    // Broadcast Command to All 5 Bots
+    async function executeBroadcast() {
+      const bPrompt = document.getElementById('broadcastPrompt').value.trim();
+      if (!bPrompt) {
+        showToast('Isi pesan broadcast terlebih dahulu!');
+        playSound('error');
+        return;
+      }
+
+      closeBroadcastModal();
+      showToast('🚀 Menjalankan broadcast ke 5 bot...');
+
+      const keys = Object.keys(BOT_CONFIGS);
+
+      // Populate prompts
+      keys.forEach(k => {
+        document.getElementById(`prompt-${k}`).value = bPrompt;
+      });
+
+      // Execute in parallel
+      await Promise.all(keys.map(k => runBot(k)));
+    }
+
+    // Copy Single Bot Output
+    function copyBotOutput(botKey) {
+      playSound('click');
+      const text = botOutputs[botKey];
+      if (!text) {
+        showToast('Tidak ada teks untuk dicopy!');
+        return;
+      }
+
+      copyToClipboard(text);
+    }
+
+    // Copy Entire Campaign Summary
+    function copyFullCampaign() {
+      playSound('click');
+      let fullText = "=== LITTLE STUDIO VIRTUAL OFFICE CAMPAIGN BRIEF ===\n\n";
+
+      let count = 0;
+      Object.keys(BOT_CONFIGS).forEach(key => {
+        if (botOutputs[key]) {
+          fullText += `--- ${BOT_CONFIGS[key].name} (${BOT_CONFIGS[key].role}) ---\n`;
+          fullText += `${botOutputs[key]}\n\n`;
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        showToast('Belum ada output bot yang tersedia!');
+        return;
+      }
+
+      copyToClipboard(fullText);
+    }
+
+    // Clipboard Exec Helper
+    function copyToClipboard(text) {
+      const dummy = document.createElement("textarea");
+      document.body.appendChild(dummy);
+      dummy.value = text;
+      dummy.select();
+      document.execCommand("copy");
+      document.body.removeChild(dummy);
+
+      showToast('Copied to clipboard! ✨');
+      playSound('complete');
+    }
+
+    // Reset Single Bot Output
+    function clearBot(botKey) {
+      playSound('click');
+      delete botOutputs[botKey];
+      document.getElementById(`output-${botKey}`).innerHTML = `<span class="text-gray-500 italic">Belum ada instruksi. Ketik prompt lalu jalankan...</span>`;
+      document.getElementById(`badge-${botKey}`).className = 'px-2 py-0.5 text-[10px] font-pixel rounded bg-gray-700 text-gray-300';
+      document.getElementById(`badge-${botKey}`).innerText = 'IDLE';
+      saveState();
+      showToast('Output dibersihkan');
+    }
+
+    // Clear All
+    function clearAllOutputs() {
+      playSound('click');
+      botOutputs = {};
+      Object.keys(BOT_CONFIGS).forEach(key => {
+        clearBot(key);
+      });
+      showToast('Semua output di-reset!');
+    }
+
+    // Update Master Summary Box
+    function updateMasterSummary() {
+      const box = document.getElementById('campaignSummary');
+      let summaryText = "";
+
+      let count = 0;
+      Object.keys(BOT_CONFIGS).forEach(key => {
+        if (botOutputs[key]) {
+          summaryText += `📌 [${BOT_CONFIGS[key].name} - ${BOT_CONFIGS[key].role}]\n`;
+          summaryText += `${botOutputs[key].substring(0, 200)}...\n\n`;
+          count++;
+        }
+      });
+
+      if (count === 0) {
+        box.innerText = "Belum ada kampanye gabungan. Lakukan broadcast atau jalankan setiap bot untuk mengompilasi brief lengkap di sini.";
+      } else {
+        box.innerText = summaryText;
+      }
+    }
+
+    // Toast Popup Helper
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+
+      toastMsg.innerText = message;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
+```
