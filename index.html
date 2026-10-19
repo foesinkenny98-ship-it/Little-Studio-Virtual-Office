@@ -44,8 +44,7 @@
     body {
       background-color: #161426;
       color: #f8f8f2;
-      background-image: 
-        radial-gradient(#2a2640 1px, transparent 0);
+      background-image: radial-gradient(#2a2640 1px, transparent 0);
       background-size: 24px 24px;
     }
 
@@ -54,11 +53,6 @@
       box-shadow: 
         inset -4px -4px 0px 0px #1a1728,
         4px 4px 0px 0px #0c0a14;
-    }
-
-    .pixel-box {
-      border: 3px solid #ff79c6;
-      box-shadow: 3px 3px 0 #bd93f9;
     }
 
     .pixel-btn {
@@ -114,13 +108,6 @@
     ::-webkit-scrollbar-thumb:hover {
       background: #ff79c6;
     }
-
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
   </style>
 </head>
 <body class="font-sans antialiased min-h-screen flex flex-col justify-between p-2 md:p-6">
@@ -133,7 +120,7 @@
       </div>
       <div>
         <h1 class="font-pixel text-xl text-retroAccent tracking-wider">LITTLE STUDIO</h1>
-        <p class="text-xs text-retroCyan font-vt text-lg tracking-widest">VIRTUAL OFFICE • GEMINI 2.5 POWERED</p>
+        <p class="text-xs text-retroCyan font-vt text-lg tracking-widest">VIRTUAL OFFICE • GEMINI 2.5 FLASH POWERED</p>
       </div>
     </div>
 
@@ -409,7 +396,7 @@
 
   <!-- FOOTER -->
   <footer class="text-center text-xs text-gray-500 font-vt text-lg pt-4 border-t border-retroBorder">
-    LITTLE STUDIO VIRTUAL OFFICE • GEMINI AI AUTOMATION ENGINE • AUTO-SAVED TO LOCALSTORAGE
+    LITTLE STUDIO VIRTUAL OFFICE • GEMINI 2.5 FLASH ENGINE • AUTO-SAVED TO LOCALSTORAGE
   </footer>
 
   <!-- MODAL: SET API KEY -->
@@ -423,7 +410,7 @@
       </div>
 
       <p class="text-xs text-gray-300 mb-4">
-        Masukkan Google Gemini API Key Anda. Key disimpan secara aman di browser Anda (LocalStorage) dan digunakan untuk memanggil model <span class="text-retroYellow">gemini-2.5-flash</span>.
+        Masukkan Google Gemini API Key Anda. Key disimpan secara aman di browser Anda (LocalStorage) dan digunakan untuk memanggil model <span class="text-retroYellow font-bold">gemini-2.5-flash</span>.
       </p>
 
       <input id="keyInput" type="password" placeholder="AIzaSy..." class="w-full bg-retroBg border border-retroBorder rounded p-2 text-xs text-gray-100 font-mono mb-4 focus:outline-none focus:border-retroCyan" />
@@ -684,7 +671,7 @@ Nada bicara jujur, tajam, memberi masukan membangun, serta berbasis psikologi au
       return formatted;
     }
 
-    // Call Gemini API REST Endpoint
+    // Call Gemini API REST Endpoint (Updated Model Endpoint: gemini-2.5-flash)
     async function callGeminiApi(systemPrompt, userPrompt) {
       if (!apiKey) {
         throw new Error('API Key Gemini belum diset. Silakan isi terlebih dahulu.');
